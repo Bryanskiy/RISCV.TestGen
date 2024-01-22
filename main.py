@@ -49,7 +49,7 @@ def main() -> None:
     instr_amount: int = yaml_data["test_opts"]["instr_cnt"]
 
     gen = Generator()
-    instrs = [gen.generateInstr() for i in range(instr_amount)]
+    instrs = [gen.generateInstr() for _ in range(instr_amount)]
 
     print(instrs)
 
