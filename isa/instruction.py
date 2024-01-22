@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from isa.info import InstrFormatTy
+import random
+
 from isa.info import InstrNameTy
 
 
@@ -17,10 +18,10 @@ class Field:
 
 @dataclass
 class Instruction:
+    name: InstrNameTy
+
     rd: int
     rs1: int
     rs2: int
     rs3: int
     imm: int
-
-    name: InstrNameTy

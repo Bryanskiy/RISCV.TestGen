@@ -2,8 +2,11 @@ import argparse
 import yaml
 from pathlib import Path
 import subprocess
+import random
 
 import isa.info
+
+from generator import Generator
 
 
 def main() -> None:
@@ -43,9 +46,12 @@ def main() -> None:
 
     isa.info.generate_enums(inst_data)
 
-    for name, fmt in isa.info.NAME_TO_FORMAT.items():
-        if fmt in (isa.info.InstrFormatTy.I,):
-            print(name)
+    instr_amount: int = yaml_data["test_opts"]["instr_cnt"]
+
+    gen = Generator()
+    instrs = [gen.generateInstr() for i in range(instr_amount)]
+
+    print(instrs)
 
 
 if "__main__" == __name__:

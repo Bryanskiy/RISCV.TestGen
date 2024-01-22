@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum, auto
-from typing import Any
+from typing import Any, TypeAlias
 
 
 # https://github.com/llvm-mirror/llvm/blob/master/lib/Target/RISCV/RISCVInstrFormats.td
@@ -12,7 +12,12 @@ class InstrFormatTy(IntEnum):
     J = auto()
 
 
-NAME_TO_FORMAT: dict[Any, InstrFormatTy] = {}
+XLEN = 32
+
+
+InstrNameTy: TypeAlias = Any
+
+NAME_TO_FORMAT: dict[InstrNameTy, InstrFormatTy] = {}
 FORMAT_TO_FIELDS = {
     InstrFormatTy.R: (
         {"rd", "rs1", "rs2"},
@@ -39,13 +44,13 @@ def generate_enums(yaml_dict: dict[str, Any]):
 
         flds = set(data["variable_fields"])
 
-        for fmt, fields in __FORMAT_TO_FIELDS.items():
+        for fmt, fields in FORMAT_TO_FIELDS.items():
             for field in fields:
                 if set(field) == flds:
                     name_to_format[name.upper()] = fmt
 
-    globals()["InstrNameTy"] = Enum("InstrNameTy", instructions)
-    globals()["InstrExtensionTy"] = Enum("InstrExtensionTy", list(extensions))
+    globals()["InstrNameTy"] = Enum("InstrNameTy", instructions, start=0)
+    globals()["InstrExtensionTy"] = Enum("InstrExtensionTy", list(extensions), start=0)
 
     for name, fmt in name_to_format.items():
         NAME_TO_FORMAT[InstrNameTy[name]] = fmt
