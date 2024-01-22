@@ -1,1 +1,1 @@
-# Awesome RISCV test geberator
+# Awesome RISCV test generator
