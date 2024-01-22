@@ -1,93 +1,51 @@
 from enum import Enum, IntEnum, auto
+from typing import Any
 
-class InstrGroupTy(IntEnum):
-    RV32I = 0
-    RV32M = auto()
-    RV32A = auto()
 
 # https://github.com/llvm-mirror/llvm/blob/master/lib/Target/RISCV/RISCVInstrFormats.td
 class InstrFormatTy(IntEnum):
-    InstFormatR = 0
-    # InstFormatU = auto()
-    # InstFormatI = auto()
-    InstFormatJ = auto()
-    # InstFormatB = auto()
-    # InstFormatS = auto()
+    R = 0
+    I = auto()
+    S = auto()
+    B = auto()
+    U = auto()
+    J = auto()
 
-class InstrNameTy(IntEnum):
-    # RV32I instructions
-    LUI = 0
-    AUIPC = auto()
-    JAL = auto()
-    JALR = auto()
-    BEQ = auto()
-    BNE = auto()
-    BLT = auto()
-    BGE = auto()
-    BLTU = auto()
-    BGEU = auto()
-    LB = auto()
-    LH = auto()
-    LW = auto()
-    LBU = auto()
-    LHU = auto()
-    SB = auto()
-    SH = auto()
-    SW = auto()
-    ADDI = auto()
-    SLTI = auto()
-    SLTIU = auto()
-    XORI = auto()
-    ORI = auto()
-    ANDI = auto()
-    SLLI = auto()
-    SRLI = auto()
-    SRAI = auto()
-    ADD = auto()
-    SUB = auto()
-    SLL = auto()
-    SLT = auto()
-    SLTU = auto()
-    XOR = auto()
-    SRL = auto()
-    SRA = auto()
-    OR = auto()
-    AND = auto()
-    NOP = auto()
-    ECALL = auto()
-    EBREAK = auto()
 
-# https://github.com/llvm-mirror/llvm/blob/master/lib/Target/RISCV/RISCVRegisterInfo.td
-class RegTy(IntEnum):
-    X0 = 0
-    X1 = auto()
-    X2 = auto()
-    X3 = auto()
-    X4 = auto()
-    X5 = auto()
-    X6 = auto()
-    X7 = auto()
-    X8 = auto()
-    X9 = auto()
-    X10 = auto()
-    X11 = auto()
-    X12 = auto()
-    X13 = auto()
-    X14 = auto()
-    X15 = auto()
-    X16 = auto()
-    X17 = auto()
-    X18 = auto()
-    X19 = auto()
-    X20 = auto()
-    X21 = auto()
-    X22 = auto()
-    X23 = auto()
-    X24 = auto()
-    X25 = auto()
-    X26 = auto()
-    X27 = auto()
-    X28 = auto()
-    X29 = auto()
-    X30 = auto()
-    X31 = auto()
+NAME_TO_FORMAT: dict[Any, InstrFormatTy] = {}
+FORMAT_TO_FIELDS = {
+    InstrFormatTy.R: (
+        {"rd", "rs1", "rs2"},
+        {"rd", "rs1", "rs2", "rs3"},
+    ),
+    InstrFormatTy.I: ({"rd", "rs1", "imm12"},),
+    InstrFormatTy.S: ({"imm12lo", "rs1", "rs2", "imm12hi"},),
+    InstrFormatTy.B: ({"bimm12lo", "rs1", "rs2", "bimm12hi"},),
+    InstrFormatTy.U: ({"rd", "imm20"},),
+    InstrFormatTy.J: ({"rd", "jimm20"},),
+}
+
+
+def generate_enums(yaml_dict: dict[str, Any]):
+    extensions: set[str] = set()
+    instructions: list[str] = []
+    name_to_format: dict[str, InstrFormatTy] = {}
+
+    for name, data in yaml_dict.items():
+        for ext in data["extension"]:
+            extensions.add(ext)
+
+        instructions.append(name.upper())
+
+        flds = set(data["variable_fields"])
+
+        for fmt, fields in __FORMAT_TO_FIELDS.items():
+            for field in fields:
+                if set(field) == flds:
+                    name_to_format[name.upper()] = fmt
+
+    globals()["InstrNameTy"] = Enum("InstrNameTy", instructions)
+    globals()["InstrExtensionTy"] = Enum("InstrExtensionTy", list(extensions))
+
+    for name, fmt in name_to_format.items():
+        NAME_TO_FORMAT[InstrNameTy[name]] = fmt
