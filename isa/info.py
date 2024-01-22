@@ -41,6 +41,10 @@ FORMAT_TO_FIELDS = {
     InstrFormatTy.J: ({"rd", "jimm20"},),
 }
 
+INSTR_CATEGORY = {
+    "LOAD_CATEGORY": ["LB", "LBU", "LH", "LHU", "LW"],
+    "STORE_CATEGORY":  ["SB", "SH", "SW"],
+}
 
 def generate_enums(yaml_dict: dict[str, Any]):
     extensions: set[str] = set()

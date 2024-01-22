@@ -5,6 +5,7 @@ import subprocess
 import random
 
 import isa.info
+import isa.instruction
 
 from generator import Generator
 
@@ -46,13 +47,20 @@ def main() -> None:
 
     isa.info.generate_enums(inst_data)
 
+    for name, fmt in isa.info.NAME_TO_FORMAT.items():
+        if fmt in (isa.info.InstrFormatTy.R,):
+            print(name)
+
     instr_amount: int = yaml_data["test_opts"]["instr_cnt"]
 
     gen = Generator()
     instrs = gen.generateMem()
     # instrs = [gen.generateInstr() for _ in range(instr_amount)]
 
-    print(instrs)
+
+    with open("genAsm.s", 'w') as gen_asm:
+        for instr in instrs:
+            print(gen.genetateAsm(instr), file=gen_asm)
 
 
 if "__main__" == __name__:
