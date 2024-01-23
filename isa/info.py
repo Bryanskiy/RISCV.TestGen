@@ -1,5 +1,6 @@
 from enum import Enum, IntEnum, auto
 from typing import Any, TypeAlias
+from collections import defaultdict
 
 
 # https://github.com/llvm-mirror/llvm/blob/master/lib/Target/RISCV/RISCVInstrFormats.td
@@ -17,7 +18,17 @@ XLEN = 32
 
 InstrNameTy: TypeAlias = Any
 
+
+class InstrCategoryTy(IntEnum):
+    LOAD = 0
+    STORE = auto()
+    SYS = auto()
+
+
+CATEGORY_TO_INSTR: dict = {}
+
 NAME_TO_FORMAT: dict[InstrNameTy, InstrFormatTy] = {}
+FORMAT_TO_INSTR: dict[InstrFormatTy, set[InstrNameTy]] = defaultdict(set)
 FORMAT_TO_FIELDS = {
     InstrFormatTy.R: (
         {"rd", "rs1", "rs2"},
@@ -54,3 +65,24 @@ def generate_enums(yaml_dict: dict[str, Any]):
 
     for name, fmt in name_to_format.items():
         NAME_TO_FORMAT[InstrNameTy[name]] = fmt
+        FORMAT_TO_INSTR[fmt].add(InstrNameTy[name])
+
+    CATEGORY_TO_INSTR[InstrCategoryTy.LOAD] = (
+        InstrNameTy.LB,
+        InstrNameTy.LBU,
+        InstrNameTy.LH,
+        InstrNameTy.LHU,
+        InstrNameTy.LW,
+    )
+
+    CATEGORY_TO_INSTR[InstrCategoryTy.STORE] = (
+        InstrNameTy.SB,
+        InstrNameTy.SH,
+        InstrNameTy.SW,
+    )
+
+    CATEGORY_TO_INSTR[InstrCategoryTy.SYS] = (
+        InstrNameTy.ECALL,
+        InstrNameTy.EBREAK,
+        InstrNameTy.FENCE,
+    )
