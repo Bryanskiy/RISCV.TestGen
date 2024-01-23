@@ -54,7 +54,7 @@ def main() -> None:
     instrs = gen.generateMem()
     # instrs = [gen.generateInstr() for _ in range(instr_amount)]
 
-    with open("genAsm.s", 'w') as gen_asm:
+    with open("genAsm.s", "w") as gen_asm:
         print(ASM_PREAMBULE, file=gen_asm)
         for instr in instrs:
             instr_asm = str()
@@ -64,7 +64,6 @@ def main() -> None:
                 print("Handling run-time error:", err)
             #
             print(f"    {instr_asm}", file=gen_asm)
-            
 
 
 if "__main__" == __name__:
