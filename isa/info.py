@@ -44,7 +44,6 @@ FORMAT_TO_FIELDS = {
     InstrFormatTy.J: ({"rd", "jimm20"},),
 }
 
-
 def get_bit_map_dict(
     msb: int, lsb: int | None = None, lshift: int = 0, signext: bool = True) -> BitDict:
     """Helper function to build decoding dictionary"""
@@ -112,6 +111,7 @@ def generate_enums(yaml_dict: dict[str, Any]):
 
     for name, fmt in name_to_format.items():
         NAME_TO_FORMAT[InstrNameTy[name]] = fmt
+
         FORMAT_TO_INSTR[fmt].add(InstrNameTy[name])
 
     CATEGORY_TO_INSTR[InstrCategoryTy.LOAD] = (
