@@ -6,7 +6,7 @@ import random
 
 import isa.info
 
-from generator import Generator
+from generator import Generator, GenCfg
 
 
 def main() -> None:
@@ -49,7 +49,8 @@ def main() -> None:
     instr_amount: int = yaml_data["test_opts"]["instr_cnt"]
 
     gen = Generator()
-    instrs = [gen.generateInstr() for _ in range(instr_amount)]
+    instrs = gen.generateBB()
+    # instrs = [gen.generateInstr() for _ in range(instr_amount)]
 
     print(instrs)
 
