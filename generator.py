@@ -209,16 +209,11 @@ def map_imm(value: int, nbits: int, *imm_dicts):
     #
     for imm_dict in imm_dicts:
         for it in reversed(imm_dict):
-            imm_shift = it["lsb"] if imm_shift == None else imm_shift
-            #
-            width, bits = it["msb"] - it["lsb"] + 1, get_bits(
-                value, it["msb"], it["lsb"]
-            )
-            mapped |= bits >> it["lsb"]
-            #
-            imm_shift += width
+            bits = get_bits(value, it['from'], it["lshift"])
 
+            mapped |= (bits >> it["lshift"])
+            #
             if it["msb"] == 31 and nbits:
-                do_sext = (bits >> 31) & (1)
+                do_sext = (bits >> it['from']) & (1)
     #
     return mapped if not do_sext else sext(mapped, nbits)
