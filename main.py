@@ -37,7 +37,7 @@ def main() -> None:
             stderr=subprocess.STDOUT,
             cwd=script.parent,
         )
-        print(str(status.stdout, "utf-8"))
+        # print(str(status.stdout, "utf-8"))
     except subprocess.CalledProcessError as ex:
         print(
             f"Command {' '.join(map(str, ex.cmd))} exited w/ non zero status: {ex.stdout}"
@@ -51,10 +51,11 @@ def main() -> None:
     instr_amount: int = yaml_data["test_opts"]["instr_cnt"]
 
     gen = Generator()
-    instrs = gen.generateMem()
+    instrs = gen.generateMem(instr_amount)
     # instrs = [gen.generateInstr() for _ in range(instr_amount)]
+    out_file: Path = Path.cwd() / f"{yaml_data['test_name']}.s"
 
-    with open("genAsm.s", "w") as gen_asm:
+    with open(out_file, "w") as gen_asm:
         print(ASM_PREAMBULE, file=gen_asm)
         for instr in instrs:
             instr_asm = str()
@@ -64,6 +65,8 @@ def main() -> None:
                 print("Handling run-time error:", err)
             #
             print(f"    {instr_asm}", file=gen_asm)
+
+    print(f"Output was written to file {out_file.resolve()}")
 
 
 if "__main__" == __name__:

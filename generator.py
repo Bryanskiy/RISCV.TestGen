@@ -82,7 +82,7 @@ class Generator:
                     imm=addr_offset,
                 ),
             ]
-            + self.generateBB()
+            + self.generateBB(count)
             + gen_preambula()
             + [
                 instr.Instruction(
