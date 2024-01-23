@@ -8,6 +8,7 @@ import isa.info
 import isa.instruction
 
 from generator import Generator
+from generator import ASM_PREAMBULE
 
 
 def main() -> None:
@@ -47,20 +48,23 @@ def main() -> None:
 
     isa.info.generate_enums(inst_data)
 
-    for name, fmt in isa.info.NAME_TO_FORMAT.items():
-        if fmt in (isa.info.InstrFormatTy.R,):
-            print(name)
-
     instr_amount: int = yaml_data["test_opts"]["instr_cnt"]
 
     gen = Generator()
     instrs = gen.generateMem()
     # instrs = [gen.generateInstr() for _ in range(instr_amount)]
 
-
     with open("genAsm.s", 'w') as gen_asm:
+        print(ASM_PREAMBULE, file=gen_asm)
         for instr in instrs:
-            print(gen.genetateAsm(instr), file=gen_asm)
+            instr_asm = str()
+            try:
+                instr_asm = gen.genetateAsm(instr)
+            except RuntimeError as err:
+                print("Handling run-time error:", err)
+            #
+            print(f"    {instr_asm}", file=gen_asm)
+            
 
 
 if "__main__" == __name__:

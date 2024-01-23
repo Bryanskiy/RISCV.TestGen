@@ -204,7 +204,7 @@ class Generator:
                         mnemonic, instr_data.rd, instr_data.rs1, hex(instr_data.imm))
             #
             case InstrFormatTy.S:
-                if mnemonic in isa.info.INSTR_CATEGORY["STORE_CATEGORY"]:
+                if instr_data.name in isa.info.InstrCategoryTy["STORE"]:
                     asm_str = '{} x{}, {} (x{})'.format(
                         mnemonic, instr_data.rs2, hex(instr_data.imm), instr_data.rs1)
                 else:

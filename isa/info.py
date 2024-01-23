@@ -2,6 +2,7 @@ from enum import Enum, IntEnum, auto
 from typing import Any, TypeAlias
 from collections import defaultdict
 
+from dataclasses import dataclass
 
 # https://github.com/llvm-mirror/llvm/blob/master/lib/Target/RISCV/RISCVInstrFormats.td
 class InstrFormatTy(IntEnum):
@@ -17,6 +18,8 @@ XLEN = 32
 
 
 InstrNameTy: TypeAlias = Any
+InstrCategoryTy : dict = {}
+BitDict = dict[str, bool | int]
 
 
 class InstrCategoryTy(IntEnum):
@@ -41,9 +44,49 @@ FORMAT_TO_FIELDS = {
     InstrFormatTy.J: ({"rd", "jimm20"},),
 }
 
-INSTR_CATEGORY = {
-    "LOAD_CATEGORY": ["LB", "LBU", "LH", "LHU", "LW"],
-    "STORE_CATEGORY":  ["SB", "SH", "SW"],
+
+def get_bit_map_dict(
+    msb: int, lsb: int | None = None, lshift: int = 0, signext: bool = True) -> BitDict:
+    """Helper function to build decoding dictionary"""
+
+    if lsb is None:
+        lsb = msb
+    assert msb >= lsb
+    assert lshift < 32
+    return {
+        "msb": msb,
+        "lsb": lsb,
+        "lshift": lshift,
+        "from": lshift + msb - lsb,
+        "sign": signext,
+    }
+
+IMM_DICT: dict[str, tuple[BitDict, ...]] = {
+    "imm20": (get_bit_map_dict(31, 12, 12),),
+    "jimm20": (
+        get_bit_map_dict(31, lshift=20),
+        get_bit_map_dict(30, 21, 1),
+        get_bit_map_dict(20, lshift=11),
+        get_bit_map_dict(19, 12, 12),
+    ),
+    "succ": (get_bit_map_dict(23, 20),),
+    "pred": (get_bit_map_dict(27, 24, 4),),
+    "fm": (get_bit_map_dict(31, 28, 8),),
+    "imm12": (get_bit_map_dict(31, 20),),
+    "zimm": (get_bit_map_dict(19, 15, signext=False),),
+    "aq": (get_bit_map_dict(26, lshift=1),),
+    "rl": (get_bit_map_dict(25),),
+    "bimm12hi": (
+        get_bit_map_dict(31, lshift=12),
+        get_bit_map_dict(30, 25, 5),
+    ),
+    "bimm12lo": (
+        get_bit_map_dict(11, 8, 1),
+        get_bit_map_dict(7, lshift=11),
+    ),
+    "imm12hi": (get_bit_map_dict(31, 25, 5),),
+    "imm12lo": (get_bit_map_dict(11, 7),),
+    "shamtw": (get_bit_map_dict(24, 20),),
 }
 
 def generate_enums(yaml_dict: dict[str, Any]):
