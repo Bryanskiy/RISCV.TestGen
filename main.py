@@ -5,8 +5,10 @@ import subprocess
 import random
 
 import isa.info
+import isa.instruction
 
 from generator import Generator
+from generator import ASM_PREAMBULE
 
 
 def main() -> None:
@@ -52,7 +54,17 @@ def main() -> None:
     instrs = gen.generateMem()
     # instrs = [gen.generateInstr() for _ in range(instr_amount)]
 
-    print(instrs)
+    with open("genAsm.s", 'w') as gen_asm:
+        print(ASM_PREAMBULE, file=gen_asm)
+        for instr in instrs:
+            instr_asm = str()
+            try:
+                instr_asm = gen.genetateAsm(instr)
+            except RuntimeError as err:
+                print("Handling run-time error:", err)
+            #
+            print(f"    {instr_asm}", file=gen_asm)
+            
 
 
 if "__main__" == __name__:

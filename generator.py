@@ -1,11 +1,27 @@
 import isa.instruction as instr
 from enum import Enum
+from typing import Any
 import random
+import textwrap
 from dataclasses import dataclass
 from typing import Sequence, ClassVar
 
 import isa.info
 
+from itertools import repeat
+from isa.info import InstrFormatTy, InstrCategoryTy, InstrNameTy
+from isa.info import IMM_DICT
+
+
+ASM_PREAMBULE = textwrap.dedent(
+    """
+    .section .text
+
+    .globl start
+
+    start:
+    """
+)
 
 @dataclass
 class Generator:
@@ -50,7 +66,8 @@ class Generator:
 
         def gen_preambula():
             return [
-                instr.Instruction(isa.info.InstrNameTy.LUI, rd=base, imm=addr_regval),
+                instr.Instruction(isa.info.InstrNameTy.LUI,
+                                  rd=base, imm=addr_regval),
                 instr.Instruction(
                     isa.info.InstrNameTy.ADDI, rd=base, imm=addr_regval, rs1=0
                 ),
@@ -102,3 +119,101 @@ class Generator:
                 range(instrs_count),
             )
         )
+
+    def genetateAsm(self, instr_data: instr.Instruction):
+        cur_format: InstrFormatTy = isa.info.NAME_TO_FORMAT.get(
+            instr_data.name)
+        mnemonic = f"{instr_data.name.name}"
+
+        match cur_format:
+            case InstrFormatTy.R:
+                asm_str = '{} x{}, x{}, x{}'.format(
+                    mnemonic, instr_data.rd, instr_data.rs1, instr_data.rs2)
+            #
+            case InstrFormatTy.I:
+                res_imm: str = map_imm(instr_data.imm, 12, IMM_DICT["imm12"])
+
+                if instr_data.name in isa.info.CATEGORY_TO_INSTR[InstrCategoryTy.LOAD]:
+                    asm_str = '{} x{}, {}(x{})'.format(
+                        mnemonic, instr_data.rd, res_imm, instr_data.rs1)
+                else:
+                    asm_str = '{} x{}, x{}, {}'.format(
+                        mnemonic, instr_data.rd, instr_data.rs1, hex(res_imm))
+            #
+            case InstrFormatTy.S:
+                res_imm: str = map_imm(instr_data.imm, 12,
+                                       IMM_DICT["imm12lo"], IMM_DICT["imm12hi"])
+
+                if instr_data.name in isa.info.CATEGORY_TO_INSTR[InstrCategoryTy.STORE]:
+                    asm_str = '{} x{}, {}(x{})'.format(
+                        mnemonic, instr_data.rs2, res_imm, instr_data.rs1)
+                else:
+                    asm_str = '{} x{}, x{}, {}'.format(
+                        mnemonic, instr_data.rs1, instr_data.rs2, hex(res_imm))
+            #
+            case InstrFormatTy.B:
+                res_imm: str = map_imm(instr_data.imm, 12,
+                                       IMM_DICT["bimm12lo"], IMM_DICT["bimm12hi"])
+
+                asm_str = '{} x{}, x{}, {}'.format(
+                    mnemonic, instr_data.rs1, instr_data.rs2, hex(res_imm))
+            #
+            case InstrFormatTy.U:
+                res_imm: str = map_imm(
+                    instr_data.imm, False, IMM_DICT["imm20"])
+
+                asm_str = '{} x{}, {}'.format(
+                    mnemonic, instr_data.rd, hex(res_imm))
+            #
+            case InstrFormatTy.J:
+                res_imm: str = map_imm(instr_data.imm, 20, IMM_DICT["jimm20"])
+
+                asm_str = '{} x{}, {}'.format(
+                    mnemonic, instr_data.rd, hex(res_imm))
+            #
+            case _:
+                if instr_data.name in isa.info.CATEGORY_TO_INSTR[InstrCategoryTy.SYS]:
+                    pass
+                else:
+                    raise RuntimeError(
+                        f"Error : there is no support instruction {mnemonic}")
+
+        return asm_str.lower()
+
+
+def ones(num: int):
+    return (1 << num) - 1
+
+
+def get_mask(msb: int, lsb: int) -> int:
+    return ones(msb - lsb + 1) << lsb
+
+
+def get_bits(value: int, msb: int, lsb: int):
+    assert (msb >= lsb)
+    return (value) & get_mask(msb, lsb)
+
+
+def sext(value, nbits=32):
+    sign_bit = 1 << (nbits - 1)
+    return (value & (sign_bit - 1)) - (value & sign_bit)
+
+
+def map_imm(value: int, nbits: int, *imm_dicts):
+    mapped, imm_shift = 0, None
+    do_sext = False
+    #
+    for imm_dict in imm_dicts:
+        for it in reversed(imm_dict):
+            imm_shift = it["lsb"] if imm_shift == None else imm_shift
+            #
+            width, bits = it["msb"] - it["lsb"] + \
+                1, get_bits(value, it["msb"], it["lsb"])
+            mapped |= (bits >> it["lsb"])
+            #
+            imm_shift += width
+
+            if it["msb"] == 31 and nbits:
+                do_sext = (bits >> 31) & (1)
+    #
+    return mapped if not do_sext else sext(mapped, nbits)
