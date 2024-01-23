@@ -32,7 +32,7 @@ class Generator:
 
     def generateInstr(self, allowed: Sequence[isa.info.InstrNameTy]):
         random.seed(self.seed)
-        name = isa.info.InstrNameTy(random.choice(allowed))
+        name = random.choice(allowed)
 
         return self.generateInstrNamed(name)
 
@@ -98,7 +98,7 @@ class Generator:
 
         return list(
             map(
-                lambda _: random.choice(instr_set),
+                lambda _: self.generateInstr(instr_set),
                 range(instrs_count),
             )
         )
