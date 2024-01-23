@@ -60,7 +60,7 @@ class Generator:
             gen_preambula()
             + [
                 instr.Instruction(
-                    isa.info.InstrNameTy.SB,
+                    isa.info.InstrNameTy.SW,
                     rs2=self.__regGen(),
                     rs1=base,
                     imm=addr_offset,
@@ -70,7 +70,7 @@ class Generator:
             + gen_preambula()
             + [
                 instr.Instruction(
-                    isa.info.InstrNameTy.LB,
+                    isa.info.InstrNameTy.LW,
                     rd=self.__regGen(),
                     rs1=base,
                     imm=addr_offset,
